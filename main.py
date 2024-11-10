@@ -1,0 +1,40 @@
+import logging
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand
+from handlers import router
+# import db
+
+import os
+from dotenv import load_dotenv
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
+API_TOKEN = os.getenv("API_TOKEN")
+
+logging.basicConfig(level=logging.INFO)
+
+
+async def set_commands(bot: Bot):
+    commands = [
+        BotCommand(command="/start", description="Запустить бота"),
+    ]
+    await bot.set_my_commands(commands)
+
+async def main():
+    bot = Bot(token=API_TOKEN)
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
+    dp.include_router(router)
+#     await db.init_db()
+    await set_commands(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.close()
+
+
+#
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
