@@ -1,9 +1,10 @@
+import db
+
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from handlers import router
-# import db
 
 import os
 from dotenv import load_dotenv
@@ -18,6 +19,11 @@ logging.basicConfig(level=logging.INFO)
 async def set_commands(bot: Bot):
     commands = [
         BotCommand(command="/start", description="Запустить бота"),
+        BotCommand(command="/login", description="Войти"),
+        BotCommand(command="/update", description="Обновить информацию"),
+        BotCommand(command="/notifications", description="Напоминания"),
+        BotCommand(command="/delete", description="Удалить напоминание"),
+
     ]
     await bot.set_my_commands(commands)
 
@@ -26,7 +32,7 @@ async def main():
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)
-#     await db.init_db()
+    await db.init_db()
     await set_commands(bot)
     try:
         await dp.start_polling(bot)
