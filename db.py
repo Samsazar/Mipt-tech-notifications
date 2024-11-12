@@ -1,23 +1,38 @@
-from types import NoneType
+"""
+Создание и использование базы данных
+"""
+from datetime import datetime
 
 import aiosqlite
 
+
 class User:
-    def __init__(self, user_id, telegram_id, user_name, login, password):
+    """
+    Класс пользователя, с которым удобно взаимодействовать благодаря полям
+    """
+    def __init__(self, user_id: int, telegram_id: int, user_name: str, login: str, password: str):
         self.user_id = user_id
         self.telegram_id = telegram_id
         self.user_name = user_name
         self.login = login
         self.password = password
 
+
 class Notification:
-    def __init__(self, notification_id, user_id, start_time, end_time):
+    """
+    Класс пользователя, с которым удобно взаимодействовать благодаря полям
+    """
+    def __init__(self, notification_id: int, user_id: int, start_time: datetime, end_time: datetime):
         self.notification_id = notification_id
         self.user_id = user_id
         self.start_time = start_time
         self.end_time = end_time
 
+
 async def init_db():
+    """
+    Инициализация базы данных
+    """
     async with aiosqlite.connect('notifications_bot.db') as conn:
         # Создаем курсор для выполнения SQL-запросов
         cursor = await conn.cursor()
@@ -43,7 +58,12 @@ async def init_db():
         # Сохраняем изменения
         await conn.commit()
 
-async def add_user(telegram_id, user_name, login, password):
+
+async def add_user(telegram_id: int, user_name: str, login: str, password: str) -> int:
+    """
+    Добавление пользователя
+    Возвращает присвоенный пользователю id
+    """
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
@@ -61,7 +81,11 @@ async def add_user(telegram_id, user_name, login, password):
     print("Пользователь успешно добавлен.")
     return user_id
 
-async def add_notification(user_id, start_time, end_time):
+
+async def add_notification(user_id: int, start_time: datetime, end_time: datetime) -> int:
+    """
+    Добавляет уведомление
+    """
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
@@ -80,7 +104,10 @@ async def add_notification(user_id, start_time, end_time):
     return notification_id
 
 
-async def get_user_by_telegram_id(telegram_id):
+async def get_user_by_telegram_id(telegram_id: int) -> User:
+    """
+    Возвращает объект User по telegram_id
+    """
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
@@ -98,7 +125,11 @@ async def get_user_by_telegram_id(telegram_id):
     user = User(raw_user[0], telegram_id, raw_user[1], raw_user[2], raw_user[3])
     return user
 
-async def get_notifications_by_user_id(user_id):
+
+async def get_notifications_by_user_id(user_id: int) -> list:
+    """
+    Возвращает объект Notification по user_id
+    """
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
@@ -116,7 +147,11 @@ async def get_notifications_by_user_id(user_id):
         notifications.append(Notification(elem[0], user_id, elem[1], elem[2]))
     return notifications
 
-async def delete_notification_by_id(notification_id):
+
+async def delete_notification_by_id(notification_id: int) -> list:
+    """
+    Удаляет запись уведомления по его id
+    """
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 

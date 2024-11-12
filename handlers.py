@@ -35,7 +35,19 @@ months = ["Января", "Февраля", "Марта", "Апреля", "Ма�
 @router.message(Command(commands=["start"]))
 async def start_command(message: types.Message, state: FSMContext):
     # print(message.chat.id)
-    await message.answer("Привет, для начала напиши /login и войди в свой аккаунт на mipt.tech")
+    await message.answer("Привет, для начала напиши /instruction и войди в свой аккаунт на mipt.tech")
+
+
+@router.message(Command(commands=["instruction"]))
+async def instruction_command(message: types.Message, state: FSMContext):
+    # print(message.chat.id)
+    await message.answer("- Для начала необходимо войти через бота в свой аккаунт на mipt.tech."
+                         "Для этого введи команду /login\n"
+                         "- Далее вы можете обновить информацию о своих предстоящих стирках"
+                         " и добавить их в напоминания. Для этого введи команду /update\n"
+                         "- Чтобы увидеть свои напоминания, напиши команду /notifications\n"
+                         "- Для удаления напоминаний существует команда /delete\n")
+
 
 @router.message(Command(commands=["login"]))
 async def login_command(message: types.Message, state: FSMContext):
@@ -44,16 +56,19 @@ async def login_command(message: types.Message, state: FSMContext):
         await message.answer("Вы уже вошли в свой аккаунт")
         return
     await state.set_state(LoginState.login_state)
-    await message.answer("Введите ваш логин")
+    await message.answer("Введите ваш логин от mipt.tech (он рядом со значком студсовета)")
+
 
 @router.message(StateFilter(LoginState.login_state))
 async def login_input_command(message: types.Message, state: FSMContext):
     if not message.text:
         await message.answer("Введите текст, пожалуйста")
         return
-    await state.update_data(login=message.text)
+    if message.text[0] == "@":
+        input_login = message.text[1:]
+    await state.update_data(login=input_login)
     await state.set_state(LoginState.password_state)
-    await message.answer("Введите ваш пароль")
+    await message.answer("Введите ваш пароль от аккаунта на mipt.tech")
 
 
 @router.message(StateFilter(LoginState.password_state))
@@ -68,6 +83,7 @@ async def password_input_command(message: types.Message, state: FSMContext):
     password = message.text
 
     correct = check_correct_login(login, password)
+    print(correct)
     if correct:
         await add_user(telegram_id, user_name, login, password)
         await message.answer("Вы вошли! Теперь обновите информацию, чтобы мы добавили напоминание")
@@ -90,9 +106,11 @@ async def update_command(message: types.Message, state: FSMContext):
     for i in range(1, 10):
         start_time = datetime.strptime(data[-i]["start_time"], '%Y-%m-%dT%H:%M:%S+03:00')
         end_time = datetime.strptime(data[-i]["end_time"], '%Y-%m-%dT%H:%M:%S+03:00')
-        if not ((end_time.day >= datetime.now().day) and (end_time.hour >= datetime.now().day)):
+        if not (end_time.timestamp() >= datetime.now().timestamp()):
             break
-        records += f"\n{i}. {start_time.day} {months[start_time.month - 1]} с {start_time.isoformat(timespec='minutes')[-5:]} до {end_time.isoformat(timespec='minutes')[-5:]}"
+        records += (f"\n{i}. {start_time.day} {months[start_time.month - 1]} с "
+                    f"{start_time.isoformat(timespec='minutes')[-5:]} до "
+                    f"{end_time.isoformat(timespec='minutes')[-5:]}")
     if not records:
         await message.answer(f"Ни одна стиралка вами не забронирована")
         return
@@ -100,8 +118,9 @@ async def update_command(message: types.Message, state: FSMContext):
     # print(start_time.date())
     # 2024-11-06T22:00:00+03:00
     await state.set_state(AddNotificationState.datetime_state)
-    await message.answer(f"Последние 5 броней {records}\n\nВведите номер брони, которую хотите "
+    await message.answer(f"Последние брони {records}\n\nВведите номер брони, которую хотите "
                          f"добавить в напоминания или введите \"0\", чтобы отменить добавление")
+
 
 @router.message(StateFilter(AddNotificationState.datetime_state))
 async def add_command(message: types.Message, state: FSMContext):
@@ -119,7 +138,8 @@ async def add_command(message: types.Message, state: FSMContext):
         await message.answer("Отмена добавления напоминания")
         await state.clear()
         return
-    start_time = datetime.strptime(data[-add_notification_id]["start_time"], '%Y-%m-%dT%H:%M:%S+03:00')
+    start_time = datetime.strptime(data[-add_notification_id]["start_time"],
+                                   '%Y-%m-%dT%H:%M:%S+03:00')
     end_time = datetime.strptime(data[-add_notification_id]["end_time"], '%Y-%m-%dT%H:%M:%S+03:00')
     notification_id = await add_notification(user.user_id, start_time, end_time)
     await state.clear()
@@ -142,7 +162,9 @@ async def notifications_command(message: types.Message, state: FSMContext):
     for i in range(len(notifications)):
         start_date = datetime.strptime(notifications[i].start_time, "%Y-%m-%d %H:%M:%S")
         end_date = datetime.strptime(notifications[i].end_time, "%Y-%m-%d %H:%M:%S")
-        record += f"\n{i+1}. {start_date.day} {months[start_date.month - 1]} с {start_date.isoformat(timespec='minutes')[-5:]} до {end_date.isoformat(timespec='minutes')[-5:]}"
+        record += (f"\n{i+1}. {start_date.day} {months[start_date.month - 1]} с "
+                   f"{start_date.isoformat(timespec='minutes')[-5:]} до "
+                   f"{end_date.isoformat(timespec='minutes')[-5:]}")
     await message.answer(f"Ваши стиралки забронированы на: {record}")
 
 
@@ -154,7 +176,8 @@ async def request_to_delete_notification(message: types.Message, state: FSMConte
         return
     # print()
     if not await get_notifications_by_user_id(user.user_id):
-        await message.answer(f"Напоминаний нет. Для создания обновите данные с помощью команды /update")
+        await message.answer(f"Напоминаний нет. Для создания обновите "
+                             f"данные с помощью команды /update")
         return
 
     await state.set_state(DeleteState.notification_id_state)
@@ -173,8 +196,10 @@ async def delete_notification(message: types.Message, state: FSMContext):
     notifications = await get_notifications_by_user_id(user.user_id)
 
     if not (int(message.text)) in range(1, len(notifications)+1):
-        await message.answer(f"Напоминания {message.text} не существует, напишите /delete, чтобы повторить")
+        await message.answer(f"Напоминания {message.text} не существует, "
+                             f"напишите /delete, чтобы повторить")
     else:
-        deleted_notification = await delete_notification_by_id(notifications[int(message.text) - 1].notification_id)
+        deleted_notification = await (
+            delete_notification_by_id(notifications[int(message.text) - 1].notification_id))
         await message.answer(f"Напоминание {message.text} удалено")
     await state.clear()

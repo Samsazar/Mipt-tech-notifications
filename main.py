@@ -1,3 +1,6 @@
+"""
+Главный файл проекта
+"""
 import db
 
 import logging
@@ -17,17 +20,23 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def set_commands(bot: Bot):
+    """
+    Объявление команд бота
+    """
     commands = [
         BotCommand(command="/start", description="Запустить бота"),
+        BotCommand(command="/instruction", description="Узнать о работе бота"),
         BotCommand(command="/login", description="Войти"),
         BotCommand(command="/update", description="Обновить информацию"),
         BotCommand(command="/notifications", description="Напоминания"),
         BotCommand(command="/delete", description="Удалить напоминание"),
-
     ]
     await bot.set_my_commands(commands)
 
 async def main():
+    """
+    Запуск бота
+    """
     bot = Bot(token=API_TOKEN)
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
@@ -40,7 +49,6 @@ async def main():
         await bot.close()
 
 
-#
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
