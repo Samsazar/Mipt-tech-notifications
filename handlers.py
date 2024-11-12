@@ -64,8 +64,9 @@ async def login_input_command(message: types.Message, state: FSMContext):
     if not message.text:
         await message.answer("Введите текст, пожалуйста")
         return
-    if message.text[0] == "@":
-        input_login = message.text[1:]
+    input_login = message.text
+    if input_login[0] == "@":
+        input_login = input_login[1:]
     await state.update_data(login=input_login)
     await state.set_state(LoginState.password_state)
     await message.answer("Введите ваш пароль от аккаунта на mipt.tech")
