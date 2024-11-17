@@ -40,8 +40,3 @@ def get_last_washing(login: str, password: str) -> tuple:
     )
     # print(type(response))
     return response.json()
-
-# r = get_last_washing("samsa", "Samsa#1love")
-# print(r[-1]) # получение последней стирки
-
-# print(check_correct_login("0", "1"))

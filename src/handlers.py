@@ -1,19 +1,14 @@
 import asyncio
 from datetime import datetime
-from operator import index
 
-import aiogram.methods.send_message
-from aiogram import Router, types, F
-from aiogram.fsm.state import default_state
-from aiogram.types import Message
+from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.filters.state import State, StatesGroup, StateFilter
 
-from db import add_user, get_user_by_telegram_id, add_notification, delete_notification_by_id, \
+from src.db import add_user, get_user_by_telegram_id, add_notification, delete_notification_by_id, \
     get_notifications_by_user_id
-from api import get_last_washing, check_correct_login
+from src.api import get_last_washing, check_correct_login
 
 router = Router()
 
@@ -34,13 +29,11 @@ months = ["Января", "Февраля", "Марта", "Апреля", "Ма�
 
 @router.message(Command(commands=["start"]))
 async def start_command(message: types.Message, state: FSMContext):
-    # print(message.chat.id)
     await message.answer("Привет, для начала напиши /instruction и войди в свой аккаунт на mipt.tech")
 
 
 @router.message(Command(commands=["instruction"]))
 async def instruction_command(message: types.Message, state: FSMContext):
-    # print(message.chat.id)
     await message.answer("- Для начала необходимо войти через бота в свой аккаунт на mipt.tech."
                          "Для этого введи команду /login\n"
                          "- Далее вы можете обновить информацию о своих предстоящих стирках"
@@ -115,9 +108,6 @@ async def update_command(message: types.Message, state: FSMContext):
     if not records:
         await message.answer(f"Ни одна стиралка вами не забронирована")
         return
-        # notification_id = await add_notification(user.user_id, start_time, end_time)
-    # print(start_time.date())
-    # 2024-11-06T22:00:00+03:00
     await state.set_state(AddNotificationState.datetime_state)
     await message.answer(f"Последние брони {records}\n\nВведите номер брони, которую хотите "
                          f"добавить в напоминания или введите \"0\", чтобы отменить добавление")
@@ -175,7 +165,6 @@ async def request_to_delete_notification(message: types.Message, state: FSMConte
     if not user:
         await message.answer(f"Для начала войдите в свой аккаунт через /login")
         return
-    # print()
     if not await get_notifications_by_user_id(user.user_id):
         await message.answer(f"Напоминаний нет. Для создания обновите "
                              f"данные с помощью команды /update")

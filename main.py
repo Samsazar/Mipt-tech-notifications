@@ -1,13 +1,13 @@
 """
 Главный файл проекта
 """
-import db
+from src import db
 
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
-from handlers import router
+from src.handlers import router
 
 import os
 from dotenv import load_dotenv
