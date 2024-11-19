@@ -28,7 +28,6 @@ def get_last_washing(login: str, password: str) -> tuple:
         "username": login,
         "password": password
     })
-    # print(response)
     headers = {
         'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.28 Safari/537.36',
         'X-Csrftoken': session.cookies.get("csrftoken")
@@ -38,5 +37,4 @@ def get_last_washing(login: str, password: str) -> tuple:
         url=url,
         cookies=session.cookies
     )
-    # print(type(response))
     return response.json()

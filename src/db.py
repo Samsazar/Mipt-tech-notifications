@@ -34,7 +34,6 @@ async def init_db():
     Инициализация базы данных
     """
     async with aiosqlite.connect('notifications_bot.db') as conn:
-        # Создаем курсор для выполнения SQL-запросов
         cursor = await conn.cursor()
 
         await cursor.execute('''
@@ -55,7 +54,6 @@ async def init_db():
             end_time DATETIME
         )
         ''')
-        # Сохраняем изменения
         await conn.commit()
 
 
@@ -67,13 +65,11 @@ async def add_user(telegram_id: int, user_name: str, login: str, password: str) 
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
-        # Выполняем SQL-запрос для добавления нового ответа
         await cursor.execute('''
         INSERT INTO users (telegram_id, user_name, login, password)
         VALUES (?, ?, ?, ?)
         ''', (telegram_id, user_name, login, password))
 
-        # Сохраняем изменения
         await conn.commit()
 
         user_id = cursor.lastrowid
@@ -89,13 +85,11 @@ async def add_notification(user_id: int, start_time: datetime, end_time: datetim
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
-        # Выполняем SQL-запрос для добавления нового ответа
         await cursor.execute('''
         INSERT INTO notifications (user_id, start_time, end_time)
         VALUES (?, ?, ?)
         ''', (user_id, start_time, end_time))
 
-        # Сохраняем изменения
         await conn.commit()
 
         notification_id = cursor.lastrowid
@@ -111,14 +105,12 @@ async def get_user_by_telegram_id(telegram_id: int) -> User:
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
-        # Выполняем SQL-запрос для получения опроса по названию
         await cursor.execute('''
         SELECT user_id, user_name, login, password
         FROM users
         WHERE telegram_id = ?
         ''', (telegram_id,))
 
-        # Получаем результат запроса
         raw_user = await cursor.fetchone()
     if not raw_user:
         return False
@@ -133,14 +125,12 @@ async def get_notifications_by_user_id(user_id: int) -> list:
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
-        # Выполняем SQL-запрос для получения опроса по названию
         await cursor.execute('''
         SELECT notification_id, start_time, end_time
         FROM notifications
         WHERE user_id = ?
         ''', (user_id,))
 
-        # Получаем результат запроса
         raw_notifications = await cursor.fetchall()
     notifications = []
     for elem in raw_notifications:
@@ -155,17 +145,14 @@ async def delete_notification_by_id(notification_id: int) -> list:
     async with aiosqlite.connect('notifications_bot.db') as conn:
         cursor = await conn.cursor()
 
-        # Выполняем SQL-запрос для получения опроса по названию
         await cursor.execute('''
         DELETE
         FROM notifications
         WHERE notification_id = ?
         ''', (notification_id,))
 
-        # Сохраняем изменения
         await conn.commit()
 
-        # Получаем результат запроса
         data = await cursor.fetchone()
 
     return data
